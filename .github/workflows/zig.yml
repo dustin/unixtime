@@ -8,12 +8,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-latest]
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install dependencies (Linux only)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential libc6-dev clang
 
       - name: Install Zig
@@ -26,3 +32,10 @@ jobs:
 
       - name: Run tests
         run: zig build test
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: unixtime-${{ runner.os }}
+          path: |
+            zig-out/bin/unixtime*
