@@ -19,11 +19,8 @@ fn parseTimestamp(bytes: []const u8) !i64 {
         }
     }
 
-    if (digitBuf.items.len == 0) return 0;
+    var val: i64 = std.fmt.parseInt(i64, digitBuf.items, 10) catch 0;
 
-    const parsed: i64 = std.fmt.parseInt(i64, digitBuf.items, 10) catch 0;
-
-    var val = parsed;
     const limit: i64 = 1 << 31;
     while (val > limit) {
         val = @divTrunc(val, 10);
@@ -37,13 +34,10 @@ fn formatUnixTimeC(timestamp: i64) ![]const u8 {
     const cstr = c.ctime(&t);
     if (cstr == null) return error.InvalidTime;
 
-    const slice = std.mem.span(cstr);
-
-    return slice;
+    return std.mem.span(cstr);
 }
 pub fn printTS(t: i64) !void {
-    const ts = try formatUnixTimeC(t);
-    try std.io.getStdOut().writer().print("{d} {s}", .{ t, ts });
+    try std.io.getStdOut().writer().print("{d} {s}", .{ t, try formatUnixTimeC(t) });
 }
 
 pub fn main() !void {
