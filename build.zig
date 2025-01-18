@@ -39,7 +39,7 @@ pub fn build(b: *std.Build) void {
     });
 
     // Link system C
-    exe.linkSystemLibrary("c");
+    exe.linkLibC();
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
