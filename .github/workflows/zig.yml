@@ -11,13 +11,9 @@ jobs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-          - os: macos-latest
-          - os: ubuntu-24.04-arm
-            continue-on-error: true
-          - os: windows-latest
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-latest]
 
     env:
       TZ: "Pacific/Honolulu"
