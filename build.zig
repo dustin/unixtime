@@ -15,6 +15,7 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
+    // Build the static library
     const lib = b.addStaticLibrary(.{
         .name = "unixtime",
         // In this case the main source file is merely a path, however, in more
@@ -29,12 +30,16 @@ pub fn build(b: *std.Build) void {
     // running `zig build`).
     b.installArtifact(lib);
 
+    // Build the executable
     const exe = b.addExecutable(.{
         .name = "unixtime",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
+
+    // Link system C
+    exe.linkSystemLibrary("c");
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default

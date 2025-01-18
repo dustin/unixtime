@@ -1,6 +1,5 @@
 const std = @import("std");
 
-// Import C's time.h for ctime
 const c = @cImport({
     @cInclude("time.h");
 });
