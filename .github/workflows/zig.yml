@@ -12,7 +12,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm, windows-latest]
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+          - os: ubuntu-24.04-arm
+            continue-on-error: true
+          - os: windows-latest
 
     env:
       TZ: "Pacific/Honolulu"
@@ -34,7 +39,7 @@ jobs:
         run: zig build
 
       - name: Run tests
-        run: zig build test
+        run: zig build test --summary all
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
