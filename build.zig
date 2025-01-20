@@ -31,15 +31,18 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(lib);
 
     // Build the executable
+    const zeit = b.dependency("zeit", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "unixtime",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
-
-    // Link system C
-    exe.linkLibC();
+    exe.root_module.addImport("zeit", zeit.module("zeit"));
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -84,7 +87,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    exe_unit_tests.linkLibC();
+    exe_unit_tests.root_module.addImport("zeit", zeit.module("zeit"));
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 

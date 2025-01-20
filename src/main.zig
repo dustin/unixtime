@@ -1,8 +1,5 @@
 const std = @import("std");
-
-const c = @cImport({
-    @cInclude("time.h");
-});
+const zeit = @import("zeit");
 
 /// Parse a string, keeping only digit characters, and interpret it as an i64 timestamp.
 /// If bigger than 2^31, divide by 10 until smaller.
@@ -56,21 +53,34 @@ test parseTimestamp {
     }
 }
 
-fn format(timestamp: i64) ![]const u8 {
-    var t: c.time_t = @intCast(timestamp);
-
-    const cstr = c.ctime(&t);
-    if (cstr == null) return error.InvalidTime;
-
-    return std.mem.span(cstr);
+fn format(writer: anytype, timestamp: i64) !void {
+    const allocator = std.heap.page_allocator;
+    var env = try std.process.getEnvMap(allocator);
+    defer env.deinit();
+    const ns = try (zeit.Duration{ .seconds = @intCast(timestamp) }).inNanoseconds();
+    const local = try zeit.local(allocator, &env);
+    const t = (zeit.Instant{ .timestamp = ns, .timezone = &local }).time();
+    _ = try t.strftime(writer, "%Y-%m-%d %H:%M:%S %Z");
 }
 
 test format {
-    try std.testing.expectEqualSlices(u8, "Sat Jan 18 09:32:28 2025\n", try format(1737228748));
+    const allocator = std.heap.page_allocator;
+    var buf = std.ArrayList(u8).init(allocator);
+    defer buf.deinit();
+    const w = buf.writer();
+    try format(w, 1737228748);
+    try std.testing.expectEqualSlices(
+        u8,
+        try buf.toOwnedSlice(),
+        "2025-01-18 09:32:28 HST",
+    );
 }
 
 pub fn printTS(t: i64) !void {
-    try std.io.getStdOut().writer().print("{d} {s}", .{ t, try format(t) });
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("{d} ", .{t});
+    try format(stdout, t);
+    _ = try stdout.write("\n");
 }
 
 pub fn main() !void {
