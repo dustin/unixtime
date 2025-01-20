@@ -60,7 +60,7 @@ fn format(writer: anytype, timestamp: i64) !void {
     const ns = try (zeit.Duration{ .seconds = @intCast(timestamp) }).inNanoseconds();
     const local = try zeit.local(allocator, &env);
     const t = (zeit.Instant{ .timestamp = ns, .timezone = &local }).time();
-    _ = try t.strftime(writer, "%Y-%m-%d %H:%M:%S %Z");
+    _ = try t.strftime(writer, "%Y-%m-%d %H:%M:%S");
 }
 
 test format {
@@ -72,7 +72,7 @@ test format {
     try std.testing.expectEqualSlices(
         u8,
         try buf.toOwnedSlice(),
-        "2025-01-18 09:32:28 HST",
+        "2025-01-18 09:32:28",
     );
 }
 
