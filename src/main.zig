@@ -64,14 +64,13 @@ fn format(writer: anytype, timestamp: i64) !void {
 }
 
 test format {
-    const allocator = std.heap.page_allocator;
-    var buf = std.ArrayList(u8).init(allocator);
-    defer buf.deinit();
-    const w = buf.writer();
+    var buf: [64]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    const w = fbs.writer();
     try format(w, 1737228748);
     try std.testing.expectEqualSlices(
         u8,
-        try buf.toOwnedSlice(),
+        fbs.getWritten(),
         "2025-01-18 09:32:28",
     );
 }
