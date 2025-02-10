@@ -3,8 +3,10 @@ const zeit = @import("zeit");
 
 /// Parse a string, keeping only digit characters, and interpret it as an i64 timestamp.
 /// If bigger than 2^31, divide by 10 until smaller.
-fn parseTimestamp(bytes: []const u8) !i64 {
-    var digitBuf = std.ArrayList(u8).init(std.heap.page_allocator);
+fn parseTimestamp(allocator: std.mem.Allocator, bytes: []const u8) !i64 {
+    var stalloc = std.heap.stackFallback(65536, allocator);
+
+    var digitBuf = std.ArrayList(u8).init(stalloc.get());
     defer digitBuf.deinit();
 
     // Keep only digit characters
@@ -41,7 +43,7 @@ test parseTimestamp {
     };
 
     for (testCases) |testCase| {
-        const actualOrErr = parseTimestamp(testCase.input);
+        const actualOrErr = parseTimestamp(std.testing.allocator, testCase.input);
         switch (testCase.expected) {
             .value => |expVal| {
                 try std.testing.expectEqual(expVal, actualOrErr);
@@ -53,12 +55,13 @@ test parseTimestamp {
     }
 }
 
-fn format(writer: anytype, timestamp: i64) !void {
-    const allocator = std.heap.page_allocator;
-    var env = try std.process.getEnvMap(allocator);
+fn format(allocator: std.mem.Allocator, writer: anytype, timestamp: i64) !void {
+    var stalloc = std.heap.stackFallback(65536, allocator);
+    const alloc = stalloc.get();
+    var env = try std.process.getEnvMap(alloc);
     defer env.deinit();
     const ns = try (zeit.Duration{ .seconds = @intCast(timestamp) }).inNanoseconds();
-    const local = try zeit.local(allocator, &env);
+    const local = try zeit.local(alloc, &env);
     const t = (zeit.Instant{ .timestamp = ns, .timezone = &local }).time();
     _ = try t.strftime(writer, "%Y-%m-%d %H:%M:%S");
 }
@@ -67,7 +70,7 @@ test format {
     var buf: [64]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     const w = fbs.writer();
-    try format(w, 1737228748);
+    try format(std.testing.allocator, w, 1737228748);
     try std.testing.expectEqualSlices(
         u8,
         fbs.getWritten(),
@@ -75,10 +78,10 @@ test format {
     );
 }
 
-pub fn printTS(t: i64) !void {
+pub fn printTS(allocator: std.mem.Allocator, t: i64) !void {
     const stdout = std.io.getStdOut().writer();
     try stdout.print("{d} ", .{t});
-    try format(stdout, t);
+    try format(allocator, stdout, t);
     _ = try stdout.write("\n");
 }
 
@@ -93,11 +96,11 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
 
     if (args.len < 2) {
-        try printTS(std.time.timestamp());
+        try printTS(allocator, std.time.timestamp());
     }
 
     for (args[1..]) |arg| {
-        const t = try parseTimestamp(arg);
-        try printTS(t);
+        const t = try parseTimestamp(allocator, arg);
+        try printTS(allocator, t);
     }
 }
