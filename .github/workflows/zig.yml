@@ -8,16 +8,24 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} with Zig ${{ matrix.zig_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: 
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+          - ubuntu-24.04-arm
+        zig_version: [ "0.13.0", "0.14.0-dev.3187+d4c85079c" ]
         include:
           - os: ubuntu-latest
             build_flags: "-Dtarget=x86_64-linux"
           - os: macos-latest
+            build_flags: ""
           - os: windows-latest
+            build_flags: ""
           - os: ubuntu-24.04-arm
             build_flags: "-Dtarget=aarch64-linux"
 
@@ -39,7 +47,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@v1
         with:
-          version: 0.13.0
+          version: ${{ matrix.zig_version }}
 
       - name: Build project
         run: zig build ${{ matrix.build_flags }} -Doptimize=ReleaseSmall
@@ -50,6 +58,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: unixtime-${{ runner.os }}-${{ runner.arch }}
+          name: unixtime-${{ runner.os }}-${{ matrix.zig_version }}-${{ runner.arch }}
           path: |
             zig-out/bin/unixtime*
