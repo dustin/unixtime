@@ -18,7 +18,7 @@ jobs:
           - macos-latest
           - windows-latest
           - ubuntu-24.04-arm
-        zig_version: [ "0.13.0", "0.14.0-dev.3187+d4c85079c" ]
+        zig_version: [ "0.13.0", "master" ]
         include:
           - os: ubuntu-latest
             build_flags: "-Dtarget=x86_64-linux"
