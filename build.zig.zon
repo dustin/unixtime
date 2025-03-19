@@ -8,7 +8,7 @@
     // within the Zig package namespace.
     .name = .unixtime,
 
-	.fingerprint = 0xf292c5e03d05be81,
+    .fingerprint = 0xf292c5e03d05be81,
 
     // This is a [Semantic Version](https://semver.org/).
     // In a future version of Zig it will be used for package deduplication.
@@ -26,8 +26,8 @@
     // internet connectivity.
     .dependencies = .{
         .zeit = .{
-            .url = "https://github.com/rockorager/zeit/archive/refs/tags/v0.4.4.tar.gz",
-            .hash = "12204b653c90b503f89e2f1a73c4754b83fb7275c100c81872deaca12c9f17e334ec",
+            .url = "https://github.com/rockorager/zeit/archive/refs/tags/v0.6.0.tar.gz",
+            .hash = "zeit-0.0.0-5I6bk_pZAgB03N1p1GmVOZ--gOFwwQSRKj1UXb5tnaKS",
         },
     },
     .paths = .{
