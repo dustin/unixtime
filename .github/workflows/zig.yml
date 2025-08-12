@@ -38,7 +38,7 @@ jobs:
           timezoneWindows: "Hawaiian Standard Time"
       
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install dependencies (Linux only)
         if: runner.os == 'Linux'
