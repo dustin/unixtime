@@ -5,15 +5,16 @@ const zeit = @import("zeit");
 /// If bigger than 2^31, divide by 10 until smaller.
 fn parseTimestamp(allocator: std.mem.Allocator, bytes: []const u8) !i64 {
     var stalloc = std.heap.stackFallback(65536, allocator);
+    const sta = stalloc.get();
 
-    var digitBuf = std.ArrayList(u8).init(stalloc.get());
-    defer digitBuf.deinit();
+    var digitBuf = try std.ArrayList(u8).initCapacity(sta, 16);
+    defer digitBuf.deinit(sta);
 
     // Keep only digit characters
     for (bytes) |x| {
         if (x == '.') break;
         if (x >= '0' and x <= '9') {
-            try digitBuf.append(x);
+            try digitBuf.append(sta, x);
         }
     }
 
@@ -55,7 +56,7 @@ test parseTimestamp {
     }
 }
 
-fn format(allocator: std.mem.Allocator, writer: anytype, timestamp: i64) !void {
+fn format(allocator: std.mem.Allocator, writer: *std.Io.Writer, timestamp: i64) !void {
     var stalloc = std.heap.stackFallback(65536, allocator);
     const alloc = stalloc.get();
     var env = try std.process.getEnvMap(alloc);
@@ -67,22 +68,24 @@ fn format(allocator: std.mem.Allocator, writer: anytype, timestamp: i64) !void {
 }
 
 test format {
-    var buf: [64]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    const w = fbs.writer();
-    try format(std.testing.allocator, w, 1737228748);
+    var w = std.Io.Writer.Allocating.init(std.testing.allocator);
+    defer w.deinit();
+    try format(std.testing.allocator, &w.writer, 1737228748);
     try std.testing.expectEqualSlices(
         u8,
-        fbs.getWritten(),
+        w.written(),
         "2025-01-18 09:32:28",
     );
 }
 
 pub fn printTS(allocator: std.mem.Allocator, t: i64) !void {
-    const stdout = std.io.getStdOut().writer();
-    try stdout.print("{d} ", .{t});
-    try format(allocator, stdout, t);
-    _ = try stdout.write("\n");
+    var writer_buf: [128]u8 = undefined;
+    var stdout = std.fs.File.stdout().writer(&writer_buf);
+    var w = &stdout.interface;
+    defer w.flush() catch unreachable;
+    try w.print("{d} ", .{t});
+    try format(allocator, w, t);
+    _ = try w.write("\n");
 }
 
 pub fn main() !void {
