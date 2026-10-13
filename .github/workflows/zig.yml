@@ -10,6 +10,7 @@ jobs:
   build:
     name: Build on ${{ matrix.os }} with Zig ${{ matrix.zig_version }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.zig_version == 'master' }}
     strategy:
       fail-fast: false
       matrix:
@@ -18,7 +19,7 @@ jobs:
           - macos-latest
           - windows-latest
           - ubuntu-24.04-arm
-        zig_version: ["0.15.1", "master"]
+        zig_version: ["0.15.2", "master"]
         include:
           - os: ubuntu-latest
             build_flags: "-Dtarget=x86_64-linux"
